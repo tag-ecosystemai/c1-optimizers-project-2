@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+httpx
+scikit-learn
+scipy
+spacy
+python-dotenv
