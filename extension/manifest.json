@@ -1,0 +1,15 @@
+{
+    "manifest_version":3,
+    "name": "RawSignal",
+    "version": "0.1.0",
+    "description": "Detects loaded and subjective language in news articles.",
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": ["content_script/content.js"]
+        }
+    ]
+}
