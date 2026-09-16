@@ -1,14 +1,24 @@
 {
-    "manifest_version":3,
+    "manifest_version": 3,
     "name": "RawSignal",
     "version": "0.1.0",
     "description": "Detects loaded and subjective language in news articles.",
+    "permissions": ["activeTab", "scripting"],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_title": "Click to analyze this article"
+    },
+    "host_permissions": [
+        "http://localhost:8000/",
+        "https://localhost:8000/",
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background/service_worker.js"
+    },
     "content_scripts": [
         {
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
+            "matches": ["http://*/*", "https://*/*"],
             "js": ["content_script/content.js"]
         }
     ]
