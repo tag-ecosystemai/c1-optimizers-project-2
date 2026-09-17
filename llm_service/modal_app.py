@@ -34,7 +34,7 @@ class Summarizer:
             repo_id="Qwen/Qwen2.5-0.5B-Instruct-GGUF",
             filename="qwen2.5-0.5b-instruct-q4_k_m.gguf"
         )
-        self.llm = Llama(model_path=model_path, n_ctx=4096, n_threads=2, verbose=False)
+        self.llm = Llama(model_path=model_path, n_ctx=12000, n_threads=2, verbose=False)
 
     @modal.fastapi_endpoint(method="POST")
     def summarize(self, item: dict):
@@ -52,7 +52,7 @@ class Summarizer:
         response = self.llm.create_chat_completion(
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Article:\n{article_text[:6000]}"}
+                {"role": "user", "content": f"Article:\n{article_text[:40000]}"}
             ],
             max_tokens=500,
             temperature=0.3,
