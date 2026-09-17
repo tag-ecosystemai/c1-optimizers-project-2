@@ -5,7 +5,8 @@ import SummaryCard from "../components/analyse/SummaryCard";
 import HighlightedText from "../components/analyse/HighlightedText";
 import HighlightLegend from "../components/analyse/HighlightLegend";
 
-import mockAnalysis from "../data/mockAnalysis";
+import { fetchArticle, analyzeArticle, summarizeArticle } from "../api/client";
+import { buildHighlights } from "../utils/highlightAdapter";
 
 function Analyse() {
 
@@ -13,28 +14,58 @@ function Analyse() {
   const [articleUrl, setArticleUrl] = useState("");
 
   const [result, setResult] = useState(null);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleAnalyse = () => {
+  const handleAnalyse = async () => {
 
     if (!articleText.trim() && !articleUrl.trim()) {
       return;
     }
 
     setIsLoading(true);
+    setError(null);
 
-    // Temporary mock API simulation
-    setTimeout(() => {
-      setResult(mockAnalysis);
+    try {
+      let text = articleText.trim();
+      let articleMeta = null;
+
+      // If a URL was given (and no pasted text), fetch the real article first
+      if (!text && articleUrl.trim()) {
+        const fetched = await fetchArticle(articleUrl.trim());
+        text = fetched.text;
+        articleMeta = fetched;
+      }
+
+      const [analysis, summaryResult] = await Promise.all([
+        analyzeArticle(text),
+        summarizeArticle(text),
+      ]);
+
+      setResult({
+        article: {
+          title: articleMeta?.title || "Pasted article",
+          source: articleMeta?.url ? new URL(articleMeta.url).hostname : "Direct input",
+          author: articleMeta?.authors?.join(", ") || null,
+          published: articleMeta?.publish_date || null,
+          text,
+        },
+        summary: summaryResult.summary,
+        disclaimer: summaryResult.disclaimer,
+        highlights: buildHighlights(text, analysis.sentences),
+        biasRatio: analysis.bias_ratio,
+      });
+
+    } catch (err) {
+      setError(err.message || "Something went wrong analysing this article.");
+    } finally {
       setIsLoading(false);
-    }, 1200);
+    }
   };
 
   return (
     <div className="page">
 
-      {/* Hero / Input */}
       <ArticleInput
         articleText={articleText}
         setArticleText={setArticleText}
@@ -44,79 +75,52 @@ function Analyse() {
         isLoading={isLoading}
       />
 
-      {/* Results */}
+      {error && (
+        <div className="error-banner">
+          {error}
+        </div>
+      )}
+
       {result && (
         <section className="results-section">
 
           <div className="results-header">
-
             <div>
-              <span className="eyebrow">
-                ANALYSIS RESULTS
-              </span>
-
-              <h2>
-                Here's what RawSignal found.
-              </h2>
+              <span className="eyebrow">ANALYSIS RESULTS</span>
+              <h2>Here's what RawSignal found.</h2>
             </div>
 
             <div className="analysis-count">
-              <strong>
-                {result.analysis.totalHighlights}
-              </strong>
-
-              <span>
-                signals detected
-              </span>
+              <strong>{result.highlights.length}</strong>
+              <span>signals detected</span>
             </div>
-
           </div>
 
-          {/* Summary */}
-          <SummaryCard
-            summary={result.summary}
-          />
+          <SummaryCard summary={result.summary} disclaimer={result.disclaimer} />
 
-          {/* Article */}
           <section className="article-card">
-
             <div className="article-header">
-
               <div>
+                <span className="article-source">{result.article.source}</span>
+                <h2>{result.article.title}</h2>
 
-                <span className="article-source">
-                  {result.article.source}
-                </span>
-
-                <h2>
-                  {result.article.title}
-                </h2>
-
-                <div className="article-meta">
-                  <span>
-                    {result.article.author}
-                  </span>
-
-                  <span>•</span>
-
-                  <span>
-                    {result.article.published}
-                  </span>
-                </div>
-
+                {(result.article.author || result.article.published) && (
+                  <div className="article-meta">
+                    {result.article.author && <span>{result.article.author}</span>}
+                    {result.article.author && result.article.published && <span>•</span>}
+                    {result.article.published && <span>{result.article.published}</span>}
+                  </div>
+                )}
               </div>
-
             </div>
 
             <HighlightLegend />
 
             <div className="article-content">
-
               <HighlightedText
                 text={result.article.text}
                 highlights={result.highlights}
               />
-
             </div>
 
           </section>
@@ -124,23 +128,11 @@ function Analyse() {
         </section>
       )}
 
-      {/* Empty state */}
       {!result && !isLoading && (
         <section className="empty-analysis">
-
-          <div className="empty-icon">
-            ✦
-          </div>
-
-          <h3>
-            Your analysis will appear here
-          </h3>
-
-          <p>
-            Add an article above to see a neutral summary and
-            language analysis.
-          </p>
-
+          <div className="empty-icon">✦</div>
+          <h3>Your analysis will appear here</h3>
+          <p>Add an article above to see a neutral summary and language analysis.</p>
         </section>
       )}
 

@@ -14,7 +14,8 @@ def summarize_article(request: ArticleRequest):
         response = httpx.post(
             MODAL_SUMMARIZE_URL,
             json={"article_text": request.text},
-            timeout=60.0
+            timeout=180.0,
+            follow_redirects=True
         )
         response.raise_for_status()
         summary = response.json()["summary"]

@@ -14,12 +14,17 @@ def search_articles(topic: str, page_size: int = 4) -> list[dict]:
     if not api_key:
         raise NewsApiError("NEWSAPI_KEY is not configured")
 
+    # NewsAPI's pageSize parameter behaves unreliably at small values
+    # (e.g. pageSize=2 sometimes returns only 1 result even when far more
+    # exist) — request a safely larger batch and truncate ourselves.
+    request_size = max(page_size, 5)
+
     try:
         response = httpx.get(
             NEWSAPI_URL,
             params={
                 "q": topic,
-                "pageSize": page_size,
+                "pageSize": request_size,
                 "sortBy": "relevancy",
                 "language": "en",
                 "apiKey": api_key,
@@ -31,7 +36,7 @@ def search_articles(topic: str, page_size: int = 4) -> list[dict]:
         raise NewsApiError(f"NewsAPI request failed: {e}") from e
 
     payload = response.json()
-    return [
+    results = [
         {
             "title": a.get("title"),
             "url": a.get("url"),
@@ -41,3 +46,5 @@ def search_articles(topic: str, page_size: int = 4) -> list[dict]:
         for a in payload.get("articles", [])
         if a.get("url")
     ]
+
+    return results[:page_size]

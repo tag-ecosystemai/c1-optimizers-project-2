@@ -55,6 +55,8 @@ class Summarizer:
                 {"role": "user", "content": f"Article:\n{article_text[:6000]}"}
             ],
             max_tokens=500,
-            temperature=0.3
+            temperature=0.3,
+            repeat_penalty=1.3,
+            frequency_penalty=0.3
         )
         return {"summary": response["choices"][0]["message"]["content"].strip()}

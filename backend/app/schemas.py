@@ -80,11 +80,21 @@ class EntityComparison(BaseModel):
 
 class CompareRequest(BaseModel):
     topic: str = Field(min_length=1)
-    max_articles: int = Field(default=4, ge=1, le=10)
+    max_articles: int = Field(default=2, ge=1, le=2)
 
+class ComparedArticle(BaseModel):
+    title: str | None = None
+    url: str
+    source: str | None = None
+    published_at: str | None = None
+    summary: str
+    bias_flags: AnalyzeResponse
+    entities: list[Entity]
+    tone: str  # new
 
 class CompareResponse(BaseModel):
     topic: str
     articles: list[ComparedArticle]
     entity_comparison: EntityComparison
-    failed_articles: list[str] = []  # URLs that were found but couldn't be fetched/processed
+    divergences: list[dict] = []  # new
+    failed_articles: list[str] = []

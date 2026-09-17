@@ -8,8 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import analyze_bias, summarize, compare, fetch
 
-print("DEBUG - MODAL_SUMMARIZE_URL:", os.environ.get("MODAL_SUMMARIZE_URL"))
-
 app = FastAPI(title="RawSignal API")
 
 app.add_middleware(
