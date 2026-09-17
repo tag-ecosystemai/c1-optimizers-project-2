@@ -1,17 +1,16 @@
-from fastapi import APIRouter, HTTPException
-
-from ..ingestion.compare_service import NoArticlesFoundError, compare_topic
-from ..ingestion.newsapi_client import NewsApiError
-from ..schemas import CompareRequest, CompareResponse
+from fastapi import APIRouter, HTTPException, Query
+from ..schemas import CompareResponse
+from ..ingestion.compare_service import compare_topic, NoArticlesFoundError
 
 router = APIRouter()
 
 
-@router.post("/compare", response_model=CompareResponse)
-def compare_articles(request: CompareRequest):
+@router.get("/compare", response_model=CompareResponse)
+def compare_endpoint(
+    topic: str,
+    max_articles: int = Query(default=2, ge=1, le=2)
+):
     try:
-        return compare_topic(request.topic, max_articles=request.max_articles)
-    except NewsApiError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        return compare_topic(topic, max_articles=max_articles)
     except NoArticlesFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

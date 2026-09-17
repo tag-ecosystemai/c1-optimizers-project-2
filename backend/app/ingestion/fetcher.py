@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from newspaper import Article
+from newspaper import Article, Config
 from newspaper.article import ArticleException
 
 from ..schemas import FetchedArticle
@@ -11,7 +11,10 @@ class ArticleFetchError(Exception):
 
 
 def fetch_article(url: str) -> FetchedArticle:
-    article = Article(url)
+    config = Config()
+    config.request_timeout = 120  # seconds, up from newspaper3k's default of 7
+
+    article = Article(url, config=config)
     try:
         article.download()
         article.parse()

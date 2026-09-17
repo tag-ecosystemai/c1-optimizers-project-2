@@ -182,3 +182,9 @@
     border-right-color: var(--border);
   }
 }
+
+.summary-disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted, #888);
+  margin-top: 8px;
+}
