@@ -1,8 +1,9 @@
-from datetime import datetime
+# from datetime import datetime
 
-from newspaper import Article, Config
-from newspaper.article import ArticleException
+# from newspaper import Article, Config
+# from newspaper.article import ArticleException
 
+import trafilatura
 from ..schemas import FetchedArticle
 
 
@@ -11,25 +12,21 @@ class ArticleFetchError(Exception):
 
 
 def fetch_article(url: str) -> FetchedArticle:
-    config = Config()
-    config.request_timeout = 120  # seconds, up from newspaper3k's default of 7
+    downloaded = trafilatura.fetch_url(url)
+    if downloaded is None:
+        raise ArticleFetchError(f"Could not download content from {url}")
 
-    article = Article(url, config=config)
-    try:
-        article.download()
-        article.parse()
-    except ArticleException as e:
-        raise ArticleFetchError(f"Could not fetch article from {url}: {e}") from e
-
-    if not article.text.strip():
+    text = trafilatura.extract(downloaded)
+    if not text or not text.strip():
         raise ArticleFetchError(f"No article text could be extracted from {url}")
 
-    publish_date = article.publish_date
+    metadata = trafilatura.extract_metadata(downloaded)
+
     return FetchedArticle(
         url=url,
-        title=article.title or None,
-        authors=list(article.authors),
-        publish_date=publish_date.isoformat() if isinstance(publish_date, datetime) else None,
-        text=article.text,
-        top_image=article.top_image or None,
+        title=metadata.title if metadata and metadata.title else None,
+        authors=[metadata.author] if metadata and metadata.author else [],
+        publish_date=metadata.date if metadata and metadata.date else None,
+        text=text,
+        top_image=metadata.image if metadata and metadata.image else None,
     )
