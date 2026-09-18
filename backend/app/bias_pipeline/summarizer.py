@@ -1,7 +1,6 @@
 from .categories import nlp  # reuse the same loaded spaCy model, avoid loading it twice
 
-DISCLAIMER_BASE = "⚠️ Summaries are AI-generated and may contain errors. Please verify important facts against the original article."
-
+DISCLAIMER_BASE = "Summaries are AI-generated and may contain errors. Please verify important facts against the original article."
 
 def get_target_length(text: str) -> str:
     word_count = len(text.split())

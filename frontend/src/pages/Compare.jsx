@@ -4,12 +4,15 @@ import CompareInput from "../components/compare/CompareInput";
 import SourceSummary from "../components/compare/SourceSummary";
 import DivergencePanel from "../components/compare/DivergencePanel";
 
-import { compareTopic } from "../api/client";
+import { compareTopic, compareUrls } from "../api/client";
 import { adaptCompareResponse } from "../utils/compareAdapter";
 
 function Compare() {
 
+  const [mode, setMode] = useState("topic");
   const [topic, setTopic] = useState("");
+  const [urlA, setUrlA] = useState("");
+  const [urlB, setUrlB] = useState("");
 
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,15 +20,14 @@ function Compare() {
 
   const handleCompare = async () => {
 
-    if (!topic.trim()) {
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await compareTopic(topic.trim(), 2);
+      const response = mode === "topic"
+        ? await compareTopic(topic.trim(), 2)
+        : await compareUrls(urlA.trim(), urlB.trim());
+
       setResult(adaptCompareResponse(response));
     } catch (err) {
       setError(err.message || "Something went wrong comparing coverage.");
@@ -38,8 +40,14 @@ function Compare() {
     <div className="page compare-page">
 
       <CompareInput
+        mode={mode}
+        setMode={setMode}
         topic={topic}
         setTopic={setTopic}
+        urlA={urlA}
+        setUrlA={setUrlA}
+        urlB={urlB}
+        setUrlB={setUrlB}
         onCompare={handleCompare}
         isLoading={isLoading}
       />
@@ -61,9 +69,15 @@ function Compare() {
           </div>
 
           {result.failedArticles.length > 0 && (
-            <p className="compare-note">
-              Note: {result.failedArticles.length} article(s) could not be processed and were skipped.
-            </p>
+            <div className="compare-note">
+              <p><strong>Some sources couldn't be processed:</strong></p>
+              <ul>
+                {result.failedArticles.map((f, i) => (
+                  <li key={i}>{f.url} — {f.reason}</li>
+                ))}
+              </ul>
+              <p>Try sources known to work well: BBC News, Reuters, Associated Press, The Guardian.</p>
+            </div>
           )}
 
           <div className="source-summary-grid">

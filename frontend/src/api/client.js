@@ -41,3 +41,10 @@ export function compareTopic(topic, maxArticles = 2) {
     method: "GET",
   });
 }
+
+export function compareUrls(urlA, urlB) {
+  return request("/compare/urls", {
+    method: "POST",
+    body: JSON.stringify({ url_a: urlA, url_b: urlB }),
+  });
+}

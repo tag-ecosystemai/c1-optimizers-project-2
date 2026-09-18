@@ -55,9 +55,18 @@ def classify_categories(text: str) -> list[tuple[str, list[str]]]:
     if hedges_found or certainty_found:
         categories.append(('Certainty Distortion', hedges_found + certainty_found))
 
-    if any(tok.dep_ in ("nsubjpass", "auxpass") for tok in doc):
-        categories.append(('Implicit Judgment', ['passive construction']))
-
+    has_passive = any(tok.dep_ in ("nsubjpass", "auxpass") for tok in doc)
+    if has_passive:
+        # Only count as Implicit Judgment if the sentence also carries some
+        # subjective/loaded language — plain passive scheduling/factual
+        # statements ("is expected to begin", "is scheduled for") shouldn't
+        # be flagged on grammar alone.
+        has_subjective_word = any(
+            MPQA_LEXICON.get(t.text.lower(), (None, None))[0] in ('strongsubj', 'weaksubj')
+            for t in doc if t.pos_ != "PROPN"
+        )
+        if has_subjective_word:
+            categories.append(('Implicit Judgment', ['passive construction']))
     return categories
 
 
