@@ -1,18 +1,23 @@
+import { Sparkles, AlertTriangle } from "lucide-react";
+
 function SummaryCard({ summary, disclaimer }) {
   return (
     <section className="summary-card">
 
       <div className="section-label">
-        <span className="label-icon">✦</span>
+        <Sparkles size={16} />
         Neutral summary
       </div>
 
-      <p className="summary-text">
-        {summary}
-      </p>
+      <div className="summary-text">
+        {summary.split(/\n+/).filter(Boolean).map((para, i) => (
+          <p key={i}>{para}</p>
+        ))}
+      </div>
 
       {disclaimer && (
         <p className="summary-disclaimer">
+          <AlertTriangle size={14} style={{ verticalAlign: "middle", marginRight: "4px" }} />
           {disclaimer}
         </p>
       )}

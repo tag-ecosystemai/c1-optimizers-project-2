@@ -46,7 +46,9 @@ class Summarizer:
         system_prompt = (
             f"You are a neutral news summarizer. Summarize the article in {target_length}, "
             "focusing on the key facts. Do not add opinions, editorializing, or loaded language. "
-            "Do not add information not present in the article."
+            "Do not add information not present in the article. If the summary is more than "
+            "3 sentences, break it into short paragraphs (2-3 sentences each) separated by "
+            "a blank line, so it's easy to read."
         )
 
         response = self.llm.create_chat_completion(

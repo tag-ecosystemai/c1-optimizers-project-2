@@ -188,3 +188,17 @@
   color: var(--text-muted, #888);
   margin-top: 8px;
 }
+
+.show-more-toggle {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.text-button {
+  background: none;
+  border: none;
+  color: var(--accent, #000);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}

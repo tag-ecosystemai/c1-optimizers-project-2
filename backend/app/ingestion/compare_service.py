@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ..schemas import ComparedArticle, CompareResponse
+from ..schemas import ComparedArticle, CompareResponse, FailedArticle
 from .entity_comparison import compare_entities
 from .fetcher import fetch_article
 from .newsapi_client import search_articles
@@ -58,38 +58,56 @@ def generate_divergences(articles: list[ComparedArticle]) -> list[dict]:
     return divergences
 
 
-def compare_topic(topic: str, max_articles: int = 2) -> CompareResponse:
-    search_results = search_articles(topic, page_size=max_articles)
-    if not search_results:
-        raise NoArticlesFoundError(f"No articles found for topic '{topic}'")
+def _process_one(url: str, title_hint: str | None = None, source_hint: str | None = None,
+                  published_hint: str | None = None) -> ComparedArticle:
+    fetched = fetch_article(url)
+    pipeline_result = run_article_pipeline(fetched.text)
+    return ComparedArticle(
+        title=title_hint or fetched.title,
+        url=url,
+        source=source_hint,
+        published_at=published_hint or fetched.publish_date,
+        summary=pipeline_result.summary,
+        bias_flags=pipeline_result.bias_flags,
+        entities=pipeline_result.entities,
+        tone=compute_tone(pipeline_result.bias_flags.bias_ratio),
+    )
 
-    def process_one(result):
-        url = result["url"]
-        fetched = fetch_article(url)
-        pipeline_result = run_article_pipeline(fetched.text)
-        return ComparedArticle(
-            title=result.get("title") or fetched.title,
-            url=url,
-            source=result.get("source"),
-            published_at=result.get("published_at"),
-            summary=pipeline_result.summary,
-            bias_flags=pipeline_result.bias_flags,
-            entities=pipeline_result.entities,
-            tone=compute_tone(pipeline_result.bias_flags.bias_ratio),
-        )
 
+def _run_concurrent(url_infos: list[dict]) -> tuple[list[ComparedArticle], list[FailedArticle]]:
+    """url_infos: list of dicts with keys url, title, source, published_at (last three optional)."""
     articles: list[ComparedArticle] = []
-    failed_articles: list[str] = []
+    failed_articles: list[FailedArticle] = []
 
-    with ThreadPoolExecutor(max_workers=max_articles) as executor:
-        futures = {executor.submit(process_one, r): r["url"] for r in search_results}
+    with ThreadPoolExecutor(max_workers=len(url_infos)) as executor:
+        futures = {
+            executor.submit(
+                _process_one, info["url"], info.get("title"), info.get("source"), info.get("published_at")
+            ): info["url"]
+            for info in url_infos
+        }
         for future in as_completed(futures):
             url = futures[future]
             try:
                 articles.append(future.result())
             except Exception as e:
                 print(f"FAILED on {url}: {type(e).__name__}: {e}")
-                failed_articles.append(url)
+                failed_articles.append(FailedArticle(url=url, reason=str(e)))
+
+    return articles, failed_articles
+
+
+def compare_topic(topic: str, max_articles: int = 2) -> CompareResponse:
+    search_results = search_articles(topic, page_size=max_articles)
+    if not search_results:
+        raise NoArticlesFoundError(f"No articles found for topic '{topic}'")
+
+    url_infos = [
+        {"url": r["url"], "title": r.get("title"), "source": r.get("source"), "published_at": r.get("published_at")}
+        for r in search_results
+    ]
+
+    articles, failed_articles = _run_concurrent(url_infos)
 
     if not articles:
         raise NoArticlesFoundError(f"Could not process any articles for topic '{topic}'")
@@ -99,6 +117,26 @@ def compare_topic(topic: str, max_articles: int = 2) -> CompareResponse:
 
     return CompareResponse(
         topic=topic,
+        articles=articles,
+        entity_comparison=entity_comparison,
+        divergences=divergences,
+        failed_articles=failed_articles,
+    )
+
+
+def compare_urls(url_a: str, url_b: str) -> CompareResponse:
+    url_infos = [{"url": url_a}, {"url": url_b}]
+
+    articles, failed_articles = _run_concurrent(url_infos)
+
+    if not articles:
+        raise NoArticlesFoundError("Could not process either article")
+
+    entity_comparison = compare_entities([a.entities for a in articles])
+    divergences = generate_divergences(articles)
+
+    return CompareResponse(
+        topic="Direct comparison",
         articles=articles,
         entity_comparison=entity_comparison,
         divergences=divergences,

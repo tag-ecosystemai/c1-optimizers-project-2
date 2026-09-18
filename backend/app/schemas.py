@@ -92,9 +92,14 @@ class ComparedArticle(BaseModel):
     entities: list[Entity]
     tone: str  # new
 
+class FailedArticle(BaseModel):
+    url: str
+    reason: str
+
+
 class CompareResponse(BaseModel):
     topic: str
     articles: list[ComparedArticle]
     entity_comparison: EntityComparison
-    divergences: list[dict] = []  # new
-    failed_articles: list[str] = []
+    divergences: list[dict] = []
+    failed_articles: list[FailedArticle] = []

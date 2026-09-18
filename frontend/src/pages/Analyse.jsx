@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 
 import ArticleInput from "../components/analyse/ArticleInput";
 import SummaryCard from "../components/analyse/SummaryCard";
@@ -16,6 +17,7 @@ function Analyse() {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showFullArticle, setShowFullArticle] = useState(false);
 
   const handleAnalyse = async () => {
 
@@ -25,12 +27,12 @@ function Analyse() {
 
     setIsLoading(true);
     setError(null);
+    setShowFullArticle(false);
 
     try {
       let text = articleText.trim();
       let articleMeta = null;
 
-      // If a URL was given (and no pasted text), fetch the real article first
       if (!text && articleUrl.trim()) {
         const fetched = await fetchArticle(articleUrl.trim());
         text = fetched.text;
@@ -98,39 +100,50 @@ function Analyse() {
 
           <SummaryCard summary={result.summary} disclaimer={result.disclaimer} />
 
-          <section className="article-card">
-            <div className="article-header">
-              <div>
-                <span className="article-source">{result.article.source}</span>
-                <h2>{result.article.title}</h2>
+          <div className="show-more-toggle">
+            <button
+              className="text-button"
+              onClick={() => setShowFullArticle(!showFullArticle)}
+            >
+              {showFullArticle ? "Hide full article ↑" : "See full article with highlights ↓"}
+            </button>
+          </div>
 
-                {(result.article.author || result.article.published) && (
-                  <div className="article-meta">
-                    {result.article.author && <span>{result.article.author}</span>}
-                    {result.article.author && result.article.published && <span>•</span>}
-                    {result.article.published && <span>{result.article.published}</span>}
-                  </div>
-                )}
+          {showFullArticle && (
+            <section className="article-card">
+              <div className="article-header">
+                <div>
+                  <span className="article-source">{result.article.source}</span>
+                  <h2>{result.article.title}</h2>
+
+                  {(result.article.author || result.article.published) && (
+                    <div className="article-meta">
+                      {result.article.author && <span>{result.article.author}</span>}
+                      {result.article.author && result.article.published && <span>•</span>}
+                      {result.article.published && <span>{result.article.published}</span>}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <HighlightLegend />
+              <HighlightLegend />
 
-            <div className="article-content">
-              <HighlightedText
-                text={result.article.text}
-                highlights={result.highlights}
-              />
-            </div>
+              <div className="article-content">
+                <HighlightedText
+                  text={result.article.text}
+                  highlights={result.highlights}
+                />
+              </div>
 
-          </section>
+            </section>
+          )}
 
         </section>
       )}
 
       {!result && !isLoading && (
         <section className="empty-analysis">
-          <div className="empty-icon">✦</div>
+          <Sparkles size={32} color="var(--accent)" />
           <h3>Your analysis will appear here</h3>
           <p>Add an article above to see a neutral summary and language analysis.</p>
         </section>
