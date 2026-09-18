@@ -9,7 +9,7 @@ import { adaptCompareResponse } from "../utils/compareAdapter";
 
 function Compare() {
 
-  const [mode, setMode] = useState("topic");
+  const [mode, setMode] = useState("urls");
   const [topic, setTopic] = useState("");
   const [urlA, setUrlA] = useState("");
   const [urlB, setUrlB] = useState("");
@@ -19,7 +19,6 @@ function Compare() {
   const [error, setError] = useState(null);
 
   const handleCompare = async () => {
-
     setIsLoading(true);
     setError(null);
 
@@ -40,21 +39,20 @@ function Compare() {
     <div className="page compare-page">
 
       <CompareInput
-        mode={mode}
-        setMode={setMode}
-        topic={topic}
-        setTopic={setTopic}
-        urlA={urlA}
-        setUrlA={setUrlA}
-        urlB={urlB}
-        setUrlB={setUrlB}
+        mode={mode} setMode={setMode}
+        topic={topic} setTopic={setTopic}
+        urlA={urlA} setUrlA={setUrlA}
+        urlB={urlB} setUrlB={setUrlB}
         onCompare={handleCompare}
         isLoading={isLoading}
       />
 
-      {error && (
-        <div className="error-banner">
-          {error}
+      {error && <div className="error-banner">{error}</div>}
+
+      {!result && !isLoading && (
+        <div className="compare-preview-empty">
+          <h3>Awaiting input</h3>
+          <p>Enter two articles or search for a topic to see how different news outlets are framing the same story. RawSignal identifies influential language, tone shifts, and omitted context.</p>
         </div>
       )}
 
@@ -64,7 +62,7 @@ function Compare() {
           <div className="results-header">
             <div>
               <span className="eyebrow">COMPARISON RESULTS</span>
-              <h2>Same story, different signals.</h2>
+              <h2>Coverage comparison.</h2>
             </div>
           </div>
 
@@ -82,11 +80,7 @@ function Compare() {
 
           <div className="source-summary-grid">
             {result.articles.map((article, index) => (
-              <SourceSummary
-                key={article.source + index}
-                article={article}
-                sourceNumber={index + 1}
-              />
+              <SourceSummary key={article.source + index} article={article} sourceNumber={index + 1} />
             ))}
           </div>
 
@@ -96,6 +90,25 @@ function Compare() {
 
         </section>
       )}
+
+      <div className="compare-info-panel">
+        <h3>How to interpret results?</h3>
+        <p>RawSignal doesn't tell you who is "right". Instead, it highlights the structural differences in how information is presented.</p>
+        <div className="compare-info-grid">
+          <div>
+            <h5>Linguistic Framing</h5>
+            <p>Detection of emotionally charged verbs, adjectives, and terms that carry unnecessary emotional weight.</p>
+          </div>
+          <div>
+            <h5>Information Salience</h5>
+            <p>Analysis of which facts are prioritized in the lead versus which are buried or omitted.</p>
+          </div>
+          <div>
+            <h5>Narrative Tone</h5>
+            <p>Overall sentiment scoring focused on detecting underlying cynicism, optimism, or alarmism.</p>
+          </div>
+        </div>
+      </div>
 
     </div>
   );
