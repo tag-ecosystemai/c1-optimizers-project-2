@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
 
 import ArticleInput from "../components/analyse/ArticleInput";
 import SummaryCard from "../components/analyse/SummaryCard";
@@ -20,10 +19,7 @@ function Analyse() {
   const [showFullArticle, setShowFullArticle] = useState(false);
 
   const handleAnalyse = async () => {
-
-    if (!articleText.trim() && !articleUrl.trim()) {
-      return;
-    }
+    if (!articleText.trim() && !articleUrl.trim()) return;
 
     setIsLoading(true);
     setError(null);
@@ -77,11 +73,7 @@ function Analyse() {
         isLoading={isLoading}
       />
 
-      {error && (
-        <div className="error-banner">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-banner">{error}</div>}
 
       {result && (
         <section className="results-section">
@@ -91,7 +83,6 @@ function Analyse() {
               <span className="eyebrow">ANALYSIS RESULTS</span>
               <h2>Here's what RawSignal found.</h2>
             </div>
-
             <div className="analysis-count">
               <strong>{result.highlights.length}</strong>
               <span>signals detected</span>
@@ -101,52 +92,48 @@ function Analyse() {
           <SummaryCard summary={result.summary} disclaimer={result.disclaimer} />
 
           <div className="show-more-toggle">
-            <button
-              className="text-button"
-              onClick={() => setShowFullArticle(!showFullArticle)}
-            >
-              {showFullArticle ? "Hide full article ↑" : "See full article with highlights ↓"}
+            <button className="analyse-button" onClick={() => setShowFullArticle(true)}>
+              See full article with highlights →
             </button>
           </div>
-
-          {showFullArticle && (
-            <section className="article-card">
-              <div className="article-header">
-                <div>
-                  <span className="article-source">{result.article.source}</span>
-                  <h2>{result.article.title}</h2>
-
-                  {(result.article.author || result.article.published) && (
-                    <div className="article-meta">
-                      {result.article.author && <span>{result.article.author}</span>}
-                      {result.article.author && result.article.published && <span>•</span>}
-                      {result.article.published && <span>{result.article.published}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <HighlightLegend />
-
-              <div className="article-content">
-                <HighlightedText
-                  text={result.article.text}
-                  highlights={result.highlights}
-                />
-              </div>
-
-            </section>
-          )}
 
         </section>
       )}
 
       {!result && !isLoading && (
         <section className="empty-analysis">
-          <Sparkles size={32} color="var(--accent)" />
+          <div className="empty-icon">✦</div>
           <h3>Your analysis will appear here</h3>
           <p>Add an article above to see a neutral summary and language analysis.</p>
         </section>
+      )}
+
+      {showFullArticle && result && (
+        <div className="full-article-overlay" onClick={() => setShowFullArticle(false)}>
+          <div className="full-article-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="full-article-close" onClick={() => setShowFullArticle(false)}>
+              ← Close
+            </button>
+
+            <span className="article-label">Title</span>
+            <h2>{result.article.title}</h2>
+
+            {(result.article.author || result.article.published) && (
+              <div className="article-meta">
+                {result.article.author && <span>{result.article.author}</span>}
+                {result.article.author && result.article.published && <span>•</span>}
+                {result.article.published && <span>{result.article.published}</span>}
+              </div>
+            )}
+
+            <HighlightLegend />
+
+            <span className="article-label">Article</span>
+            <div className="article-content">
+              <HighlightedText text={result.article.text} highlights={result.highlights} />
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

@@ -1,11 +1,18 @@
 import { useState, useRef } from "react";
-
-import TextEditor from "../components/write/TextEditor";
-import ScoreCircle from "../components/write/ScoreCircle";
-import SuggestionPanel from "../components/write/SuggestionPanel";
+import { History, FileText, Trash2 } from "lucide-react";
 
 import { analyzeArticle } from "../api/client";
 import { buildWritingAnalysis } from "../utils/writingAdapter";
+
+const CATEGORY_COLORS = {
+  "Emotional Amplification": "emotional_language",
+  "Weasel Attribution": "loaded_language",
+  "Certainty Distortion": "absolutist_language",
+  "Implicit Judgment": "framing",
+  "Selective Emphasis": "framing",
+  "Dehumanising/Glorifying Framing": "loaded_language",
+  "General Subjective Language": "generalisation",
+};
 
 function Write() {
 
@@ -39,74 +46,113 @@ function Write() {
 
     const start = text.indexOf(suggestion.original);
     if (start === -1) return;
-
     const end = start + suggestion.original.length;
 
     textarea.focus();
     textarea.setSelectionRange(start, end);
-
-    // scroll the textarea so the selection is visible
-    const lineHeight = 24;
-    const linesBefore = text.slice(0, start).split("\n").length;
-    textarea.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight);
   };
 
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+
   return (
-    <div className="page write-page">
+    <div className="write-shell">
 
-      <section className="write-header">
-        <span className="eyebrow">WRITE</span>
-        <h1>Write with more awareness.</h1>
-        <p>Check your writing for language that could influence how readers interpret your message.</p>
-      </section>
+      <div className="write-canvas">
+        <div className="write-canvas-meta">
+          <div>
+            <span className="eyebrow">WRITE</span>
+            <h1 style={{ fontSize: "1.8rem", margin: "4px 0" }}>Write with more awareness.</h1>
+          </div>
+        </div>
 
-      <section className="write-workspace">
-
-        <div className="write-main">
-          <TextEditor ref={editorRef} text={text} setText={setText} />
-
-          {error && <div className="error-banner">{error}</div>}
-
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <div style={{ display: "flex", gap: "12px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+            <span><FileText size={14} style={{ verticalAlign: "middle" }} /> {text.length} characters · {wordCount} words</span>
+          </div>
           <button
-            className="analyse-button"
-            onClick={handleAnalyse}
-            disabled={!text.trim() || isLoading}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}
+            onClick={() => { setText(""); setAnalysis(null); }}
           >
-            {isLoading ? "Analysing..." : "Analyse my writing"}
-            {!isLoading && <span className="button-arrow">→</span>}
+            <Trash2 size={14} /> Clear
           </button>
         </div>
 
-        <div className={`write-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <textarea
+          ref={editorRef}
+          className="write-canvas-textarea"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Start writing or paste your article here..."
+        />
 
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          >
-            {sidebarCollapsed ? "←" : "→"}
-          </button>
+        {error && <div className="error-banner">{error}</div>}
 
-          {!sidebarCollapsed && (
-            analysis ? (
+        <button
+          className="analyse-button"
+          onClick={handleAnalyse}
+          disabled={!text.trim() || isLoading}
+          style={{ marginTop: "16px" }}
+        >
+          {isLoading ? "Analysing..." : "Analyse my writing"}
+          {!isLoading && <span className="button-arrow">→</span>}
+        </button>
+      </div>
+
+      <div className={`write-sidebar-panel ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <button
+          className="sidebar-collapse-toggle"
+          style={{ position: "static", marginBottom: "12px" }}
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        >
+          {sidebarCollapsed ? "←" : "→"}
+        </button>
+
+        {!sidebarCollapsed && (
+          <>
+            <h3 style={{ fontSize: "1rem" }}>Your writing analysis</h3>
+
+            {analysis ? (
               <>
-                <ScoreCircle score={analysis.score} />
-                <SuggestionPanel
-                  suggestions={analysis.suggestions}
-                  onSuggestionClick={handleSuggestionClick}
-                />
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                  Neutrality score
+                </span>
+                <div className="neutrality-score-bar">
+                  <div className="neutrality-score-fill" style={{ width: `${analysis.score}%` }} />
+                </div>
+                <p style={{ fontSize: "0.85rem", marginBottom: "20px" }}>{analysis.score}/100</p>
+
+                <div className="suggestion-list">
+                  {analysis.suggestions.map((suggestion, index) => {
+                    const colorClass = CATEGORY_COLORS[suggestion.category] || "generalisation";
+                    return (
+                      <div
+                        className={`suggestion-item ${colorClass}`}
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        <span className={`suggestion-category-badge ${colorClass}`}>
+                          {suggestion.category}
+                        </span>
+                        <h3 style={{ fontSize: "0.9rem" }}>"{suggestion.original}"</h3>
+                        <p style={{ fontSize: "0.8rem" }}>{suggestion.message}</p>
+                        <div className="suggestion-alternative">
+                          <span>Try:</span> {suggestion.alternative}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </>
             ) : (
               <div className="write-empty">
                 <div className="empty-icon">✦</div>
-                <h3>Your writing analysis</h3>
-                <p>Add some text and analyse it to see your bias signal and suggestions.</p>
+                <h3>Analysis pending</h3>
+                <p>Add some text and analyse it to see your bias signals and editorial suggestions.</p>
               </div>
-            )
-          )}
-
-        </div>
-
-      </section>
+            )}
+          </>
+        )}
+      </div>
 
     </div>
   );
