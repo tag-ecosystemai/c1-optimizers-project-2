@@ -6,7 +6,6 @@ import SuggestionPanel from "../components/write/SuggestionPanel";
 
 import { analyzeArticle } from "../api/client";
 import { buildWritingAnalysis } from "../utils/writingAdapter";
-const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
 function Write() {
 
@@ -14,6 +13,7 @@ function Write() {
   const [analysis, setAnalysis] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const editorRef = useRef(null);
 
