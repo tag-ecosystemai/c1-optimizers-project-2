@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "RawSignal",
+  "version": "1.0.0",
+  "description": "Highlights loaded, subjective, or biased language on the page you're reading.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://rawsignal-backend.onrender.com/"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon-16.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
