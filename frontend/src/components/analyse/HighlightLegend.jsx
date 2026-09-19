@@ -1,9 +1,11 @@
 const categories = [
-  { key: "emotional_language", label: "Emotional language" },
-  { key: "loaded_language", label: "Loaded language" },
-  { key: "framing", label: "Framing" },
-  { key: "absolutist_language", label: "Absolutist language" },
-  { key: "generalisation", label: "Generalisation" },
+  { key: "Emotional Amplification", label: "Emotional Amplification" },
+  { key: "Weasel Attribution", label: "Weasel Attribution" },
+  { key: "Certainty Distortion", label: "Certainty Distortion" },
+  { key: "Implicit Judgment", label: "Implicit Judgment" },
+  { key: "Selective Emphasis", label: "Selective Emphasis" },
+  { key: "Dehumanising/Glorifying Framing", label: "Dehumanising/Glorifying Framing" },
+  { key: "General Subjective Language", label: "General Subjective Language" },
 ];
 
 function HighlightLegend() {
@@ -13,7 +15,7 @@ function HighlightLegend() {
       <div className="legend-items">
         {categories.map((category) => (
           <div className="legend-item" key={category.key}>
-            <span className={`legend-dot ${category.key}`} />
+            <span className={`legend-dot cat-${category.key.replace(/[^a-zA-Z]/g, "")}`} />
             {category.label}
           </div>
         ))}

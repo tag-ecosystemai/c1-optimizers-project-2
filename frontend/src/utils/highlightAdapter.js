@@ -18,21 +18,16 @@ export function buildHighlights(fullText, sentences) {
     }
 
     const start = fullText.indexOf(sentence.text, searchFrom);
-    if (start === -1) {
-      // Sentence text didn't match exactly (whitespace/quote differences
-      // from spaCy's tokenization vs. the raw string) — skip highlighting
-      // this one rather than crash or misplace a highlight.
-      continue;
-    }
+    if (start === -1) continue;
     const end = start + sentence.text.length;
 
-    // Use the first category for the highlight color/label; explanations
-    // for all categories are still preserved in `explanations`
-    const primaryCategory = CATEGORY_MAP[sentence.categories[0]] || "framing";
+    const primaryCategory = sentence.categories[0];
+    const cssClass = "cat-" + primaryCategory.replace(/[^a-zA-Z]/g, "");
 
     highlights.push({
       text: sentence.text,
-      category: primaryCategory,
+      category: cssClass,
+      categoryLabel: primaryCategory,
       start,
       end,
       allCategories: sentence.categories,

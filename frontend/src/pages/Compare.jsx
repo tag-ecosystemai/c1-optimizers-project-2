@@ -3,6 +3,7 @@ import { useState } from "react";
 import CompareInput from "../components/compare/CompareInput";
 import SourceSummary from "../components/compare/SourceSummary";
 import DivergencePanel from "../components/compare/DivergencePanel";
+import EntityComparisonPanel from "../components/compare/EntityComparisonPanel";
 
 import { compareTopic, compareUrls } from "../api/client";
 import { adaptCompareResponse } from "../utils/compareAdapter";
@@ -87,6 +88,8 @@ function Compare() {
           {result.divergences.length > 0 && (
             <DivergencePanel divergences={result.divergences} />
           )}
+
+          <EntityComparisonPanel entityComparison={result.entityComparison} />
 
         </section>
       )}
