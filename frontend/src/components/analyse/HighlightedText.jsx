@@ -42,7 +42,7 @@ const categoryLabels = {
         <mark
           key={`highlight-${index}`}
           className={`highlight ${highlight.category}`}
-          title={categoryLabels[highlight.category] || highlight.category}
+          title={highlight.categoryLabel || highlight.category}
         >
           {text.slice(start, end)}
         </mark>
