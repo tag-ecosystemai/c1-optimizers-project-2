@@ -22,7 +22,7 @@ export function buildHighlights(fullText, sentences) {
     const end = start + sentence.text.length;
 
     const primaryCategory = sentence.categories[0];
-    const cssClass = "cat-" + primaryCategory.replace(/[^a-zA-Z]/g, "");
+    const cssClass = "cat" + primaryCategory.replace(/[^a-zA-Z]/g, "");
 
     highlights.push({
       text: sentence.text,
